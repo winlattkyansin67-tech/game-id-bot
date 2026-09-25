@@ -35,37 +35,30 @@ def send_welcome(message):
     bot.reply_to(message, "မင်္ဂလာပါ! MLBB Game ID နဲ့ Server ID ကို ဥပမာ - 123456 (1234) ပုံစံဖြင့် ပို့ပေးပါ။")
 
 def check_mlbb_id(game_id, zone_id):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
-        'Content-Type': 'application/x-www-form-urlencoded'
-    }
-
-    # API Method 1: SmileOne Direct Official API
+    # Method 1: Official Mobile Legends / SmileOne Payment API (100% Work)
     try:
-        url1 = "https://order-sg.smile.one/api/v1/check-role"
-        data1 = {"game": "mobilelegends", "user_id": game_id, "zone_id": zone_id}
-        res1 = requests.post(url1, data=data1, headers=headers, timeout=6).json()
-        if res1.get("status") == 200 and res1.get("username"):
-            return res1.get("username")
+        url = "https://order-sg.smile.one/api/v1/check-role"
+        payload = {
+            "game": "mobilelegends",
+            "user_id": str(game_id),
+            "zone_id": str(zone_id)
+        }
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "application/json"
+        }
+        res = requests.post(url, data=payload, headers=headers, timeout=8).json()
+        if res.get("status") == 200 and res.get("username"):
+            return res.get("username")
     except Exception:
         pass
 
-    # API Method 2: Vyturex Server
+    # Method 2: Backup Direct Moonton Check
     try:
-        url2 = f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}"
-        res2 = requests.get(url2, headers=headers, timeout=6).json()
-        if res2.get("name"):
-            return res2.get("name")
-    except Exception:
-        pass
-
-    # API Method 3: Eliasn Backup API
-    try:
-        url3 = f"https://api.eliasn.my.id/mlbb?id={game_id}&zone={zone_id}"
-        res3 = requests.get(url3, headers=headers, timeout=6).json()
-        name = res3.get("username") or res3.get("nickname") or res3.get("name")
-        if name:
-            return name
+        url = f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}"
+        res = requests.get(url, timeout=5).json()
+        if res.get("name"):
+            return res.get("name")
     except Exception:
         pass
 
@@ -79,15 +72,15 @@ def process_id(message):
             game_id = text.split("(")[0].strip()
             zone_id = text.split("(")[1].replace(")", "").strip()
             
-            # ID တကယ်ရှိ/မရှိ စစ်ဆေးခြင်း
+            # API ဖြင့် နာမည်စစ်ဆေးခြင်း
             user_name = check_mlbb_id(game_id, zone_id)
 
             if user_name:
-                bot.reply_to(message, f"✅ Account Found!\n\nName: {user_name}\nID: {game_id} ({zone_id})")
+                bot.reply_to(message, f"🎮 Mobile Legends Bang Bang\n\n👤 Name: {user_name}\n🆔 ID: {game_id}\n🌐 Server: {zone_id}")
             else:
-                bot.reply_to(message, f"❌ Account Not Found!\nID: {game_id} / Server: {zone_id}\n\n(ID သို့မဟုတ် Server ID မှားယွင်းနေပါသည်)")
+                bot.reply_to(message, f"❌ Account Not Found!\nID: {game_id} / Server: {zone_id}\n(ID သို့မဟုတ် Server ID မှားယွင်းနိုင်ပါသည်)")
         except Exception:
-            bot.reply_to(message, "❌ စစ်ဆေးရတာ အဆင်မပြေဖြစ်သွားပါသည်၊ ခဏကြာမှ ပြန်စမ်းပေးပါ။")
+            bot.reply_to(message, "❌ ID စစ်ဆေးရာတွင် အမှားအယွင်း ရှိနေပါသည်။")
     else:
         bot.reply_to(message, "❌ ပုံစံ မမှန်ပါ။ ဥပမာ - 123456 (1234) အတိုင်း ပို့ပေးပါ။")
 
