@@ -19,9 +19,16 @@ def run_http_server():
 
 threading.Thread(target=run_http_server, daemon=True).start()
 
-# 2. Telegram Bot Configuration (Token အမှန် အစားထိုးထားသည်)
+# 2. Telegram Bot Configuration
 TOKEN = '8507984706:AAHI9o5wHyVXfgLaBqf9CFeH1zgcTvfsmuo'
 bot = telebot.TeleBot(TOKEN)
+
+# 3. Webhook အဟောင်း ငြိနေသည်များကို ရှင်းထုတ်ခြင်း
+try:
+    bot.remove_webhook()
+    time.sleep(1)
+except Exception:
+    pass
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -48,7 +55,7 @@ def check_id(message):
     else:
         bot.reply_to(message, "❌ ပုံစံ မမှန်ပါ။ ဥပမာ - 123456 (1234) အတိုင်း ပို့ပေးပါ။")
 
-# 3. Connection မပြတ်သွားစေရန် Loop ဖြင့် စောင့်ကြည့်ခြင်း
+# 4. Connection မပြတ်သွားစေရန် Loop ဖြင့် စောင့်ကြည့်ခြင်း
 while True:
     try:
         bot.polling(none_stop=True, interval=1, timeout=60)
