@@ -34,52 +34,60 @@ except Exception:
 def send_welcome(message):
     bot.reply_to(message, "မင်္ဂလာပါ! MLBB Game ID နဲ့ Server ID ကို ဥပမာ - 123456 (1234) ပုံစံဖြင့် ပို့ပေးပါ။")
 
+def check_mlbb_id(game_id, zone_id):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    # API Method 1: SmileOne Direct Official API
+    try:
+        url1 = "https://order-sg.smile.one/api/v1/check-role"
+        data1 = {"game": "mobilelegends", "user_id": game_id, "zone_id": zone_id}
+        res1 = requests.post(url1, data=data1, headers=headers, timeout=6).json()
+        if res1.get("status") == 200 and res1.get("username"):
+            return res1.get("username")
+    except Exception:
+        pass
+
+    # API Method 2: Vyturex Server
+    try:
+        url2 = f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}"
+        res2 = requests.get(url2, headers=headers, timeout=6).json()
+        if res2.get("name"):
+            return res2.get("name")
+    except Exception:
+        pass
+
+    # API Method 3: Eliasn Backup API
+    try:
+        url3 = f"https://api.eliasn.my.id/mlbb?id={game_id}&zone={zone_id}"
+        res3 = requests.get(url3, headers=headers, timeout=6).json()
+        name = res3.get("username") or res3.get("nickname") or res3.get("name")
+        if name:
+            return name
+    except Exception:
+        pass
+
+    return None
+
 @bot.message_handler(func=lambda message: True)
-def check_id(message):
+def process_id(message):
     text = message.text.strip()
     if "(" in text and ")" in text:
         try:
             game_id = text.split("(")[0].strip()
             zone_id = text.split("(")[1].replace(")", "").strip()
             
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-            user_name = None
-
-            # API 1
-            try:
-                url1 = f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}"
-                r1 = requests.get(url1, headers=headers, timeout=5).json()
-                if "name" in r1 and r1["name"]:
-                    user_name = r1["name"]
-            except Exception:
-                pass
-
-            # API 2 (Backup)
-            if not user_name:
-                try:
-                    url2 = f"https://api.eliasn.my.id/mlbb?id={game_id}&zone={zone_id}"
-                    r2 = requests.get(url2, headers=headers, timeout=5).json()
-                    user_name = r2.get("username") or r2.get("nickname") or r2.get("name")
-                except Exception:
-                    pass
-
-            # API 3 (Backup 2)
-            if not user_name:
-                try:
-                    url3 = f"https://order-sg.smile.one/api/v1/check-role"
-                    payload = {"game": "mobilelegends", "user_id": game_id, "zone_id": zone_id}
-                    r3 = requests.post(url3, data=payload, timeout=5).json()
-                    if r3.get("status") == 200 and r3.get("username"):
-                        user_name = r3.get("username")
-                except Exception:
-                    pass
+            # ID တကယ်ရှိ/မရှိ စစ်ဆေးခြင်း
+            user_name = check_mlbb_id(game_id, zone_id)
 
             if user_name:
                 bot.reply_to(message, f"✅ Account Found!\n\nName: {user_name}\nID: {game_id} ({zone_id})")
             else:
-                bot.reply_to(message, f"❌ Account Not Found!\nID: {game_id} / Server: {zone_id}\n(ID သို့မဟုတ် Server ID မှားယွင်းနိုင်ပါသည်)")
+                bot.reply_to(message, f"❌ Account Not Found!\nID: {game_id} / Server: {zone_id}\n\n(ID သို့မဟုတ် Server ID မှားယွင်းနေပါသည်)")
         except Exception:
-            bot.reply_to(message, "❌ ID စစ်ဆေးရာတွင် အမှားအယွင်း ရှိနေပါသည်။ ခဏကြာမှ ပြန်စမ်းပါ။")
+            bot.reply_to(message, "❌ စစ်ဆေးရတာ အဆင်မပြေဖြစ်သွားပါသည်၊ ခဏကြာမှ ပြန်စမ်းပေးပါ။")
     else:
         bot.reply_to(message, "❌ ပုံစံ မမှန်ပါ။ ဥပမာ - 123456 (1234) အတိုင်း ပို့ပေးပါ။")
 
