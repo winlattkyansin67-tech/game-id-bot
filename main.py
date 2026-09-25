@@ -42,16 +42,24 @@ def check_id(message):
             game_id = text.split("(")[0].strip()
             zone_id = text.split("(")[1].replace(")", "").strip()
             
-            url = f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}"
-            response = requests.get(url, timeout=10).json()
+            # API အသစ်သို့ ပြောင်းလဲထားပါသည်
+            url = f"https://api.mobilelegends.com/check?id={game_id}&zone={zone_id}"
+            headers = {'User-Agent': 'Mozilla/5.0'}
             
-            if "name" in response:
-                user_name = response["name"]
+            # API Backup logic
+            try:
+                res = requests.get(f"https://api.eliasn.my.id/mlbb?id={game_id}&zone={zone_id}", headers=headers, timeout=8).json()
+                user_name = res.get("username") or res.get("name") or res.get("nickname")
+            except Exception:
+                res = requests.get(f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}", headers=headers, timeout=8).json()
+                user_name = res.get("name") or res.get("username")
+
+            if user_name:
                 bot.reply_to(message, f"✅ Account Found!\n\nName: {user_name}\nID: {game_id} ({zone_id})")
             else:
-                bot.reply_to(message, f"❌ Account Not Found!\nID: {game_id} / Server: {zone_id}")
-        except Exception:
-            bot.reply_to(message, "❌ ID စစ်ဆေးရာတွင် အမှားအယွင်း ရှိနေပါသည်။")
+                bot.reply_to(message, f"❌ Account Not Found!\nID: {game_id} / Server: {zone_id}\n(ID နှင့် Server မှန်မမှန် ပြန်လည်စစ်ဆေးပါ)")
+        except Exception as e:
+            bot.reply_to(message, "❌ ID စစ်ဆေးရာတွင် အမှားအယွင်း ရှိနေပါသည်။ API ခေတ္တ မအားပါ၊ ခဏကြာမှ ပြန်စမ်းပါ။")
     else:
         bot.reply_to(message, "❌ ပုံစံ မမှန်ပါ။ ဥပမာ - 123456 (1234) အတိုင်း ပို့ပေးပါ။")
 
