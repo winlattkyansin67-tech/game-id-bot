@@ -35,7 +35,7 @@ def send_welcome(message):
     bot.reply_to(message, "မင်္ဂလာပါ! MLBB Game ID နဲ့ Server ID ကို ဥပမာ - 123456 (1234) ပုံစံဖြင့် ပို့ပေးပါ။")
 
 def check_mlbb_id(game_id, zone_id):
-    # Method 1: Official Mobile Legends / SmileOne Payment API (100% Work)
+    # Method 1: SmileOne Official Web API (Direct Token Session)
     try:
         url = "https://order-sg.smile.one/api/v1/check-role"
         payload = {
@@ -44,16 +44,27 @@ def check_mlbb_id(game_id, zone_id):
             "zone_id": str(zone_id)
         }
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Accept": "application/json"
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
+            "Origin": "https://www.smile.one",
+            "Referer": "https://www.smile.one/",
+            "Accept": "application/json, text/plain, */*"
         }
-        res = requests.post(url, data=payload, headers=headers, timeout=8).json()
+        res = requests.post(url, data=payload, headers=headers, timeout=10).json()
         if res.get("status") == 200 and res.get("username"):
             return res.get("username")
     except Exception:
         pass
 
-    # Method 2: Backup Direct Moonton Check
+    # Method 2: Mobile Legends Public API Gateway
+    try:
+        url = f"https://api.mobilelegends.com/check?id={game_id}&zone={zone_id}"
+        res = requests.get(url, timeout=5).json()
+        if res.get("data") and res["data"].get("username"):
+            return res["data"]["username"]
+    except Exception:
+        pass
+
+    # Method 3: Backup Multi-API
     try:
         url = f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}"
         res = requests.get(url, timeout=5).json()
@@ -72,7 +83,7 @@ def process_id(message):
             game_id = text.split("(")[0].strip()
             zone_id = text.split("(")[1].replace(")", "").strip()
             
-            # API ဖြင့် နာမည်စစ်ဆေးခြင်း
+            # ID တကယ်ရှိ/မရှိ စစ်ဆေးခြင်း
             user_name = check_mlbb_id(game_id, zone_id)
 
             if user_name:
