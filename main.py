@@ -19,11 +19,11 @@ def run_http_server():
 
 threading.Thread(target=run_http_server, daemon=True).start()
 
-# 2. Telegram Bot Configuration
-TOKEN = '8507984706:AAHI9o5wHyVXfgLaBqf9CFeH1zgcTvfsmuo'
+# 2. Telegram Bot Configuration (Token အသစ် အစားထိုးထားသည်)
+TOKEN = '8507984706:AAFJv5Ijat069mRjp4cwbeSZAnr8SSabfzE'
 bot = telebot.TeleBot(TOKEN)
 
-# 3. Webhook အဟောင်း ငြိနေသည်များကို ရှင်းထုတ်ခြင်း
+# 3. Webhook ငြိနေသည်များကို ရှင်းထုတ်ခြင်း
 try:
     bot.remove_webhook()
     time.sleep(1)
@@ -42,24 +42,29 @@ def check_id(message):
             game_id = text.split("(")[0].strip()
             zone_id = text.split("(")[1].replace(")", "").strip()
             
-            # API အသစ်သို့ ပြောင်းလဲထားပါသည်
-            url = f"https://api.mobilelegends.com/check?id={game_id}&zone={zone_id}"
             headers = {'User-Agent': 'Mozilla/5.0'}
+            user_name = None
             
             # API Backup logic
             try:
                 res = requests.get(f"https://api.eliasn.my.id/mlbb?id={game_id}&zone={zone_id}", headers=headers, timeout=8).json()
                 user_name = res.get("username") or res.get("name") or res.get("nickname")
             except Exception:
-                res = requests.get(f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}", headers=headers, timeout=8).json()
-                user_name = res.get("name") or res.get("username")
+                pass
+
+            if not user_name:
+                try:
+                    res = requests.get(f"https://api.vyturex.com/mlbb?id={game_id}&zone={zone_id}", headers=headers, timeout=8).json()
+                    user_name = res.get("name") or res.get("username")
+                except Exception:
+                    pass
 
             if user_name:
                 bot.reply_to(message, f"✅ Account Found!\n\nName: {user_name}\nID: {game_id} ({zone_id})")
             else:
                 bot.reply_to(message, f"❌ Account Not Found!\nID: {game_id} / Server: {zone_id}\n(ID နှင့် Server မှန်မမှန် ပြန်လည်စစ်ဆေးပါ)")
-        except Exception as e:
-            bot.reply_to(message, "❌ ID စစ်ဆေးရာတွင် အမှားအယွင်း ရှိနေပါသည်။ API ခေတ္တ မအားပါ၊ ခဏကြာမှ ပြန်စမ်းပါ။")
+        except Exception:
+            bot.reply_to(message, "❌ ID စစ်ဆေးရာတွင် အမှားအယွင်း ရှိနေပါသည်။ ခဏကြာမှ ပြန်စမ်းပါ။")
     else:
         bot.reply_to(message, "❌ ပုံစံ မမှန်ပါ။ ဥပမာ - 123456 (1234) အတိုင်း ပို့ပေးပါ။")
 
